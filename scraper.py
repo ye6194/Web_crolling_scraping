@@ -1,10 +1,11 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 import time
 from config import all_gu
+
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 
 # 검색 결과 페이지 스크래핑
@@ -69,29 +70,22 @@ def search_hospital_detail(driver, unique_hospitals):
         time.sleep(1)
 
         try:
-            # '홈' span 태그가 나타날 때까지 최대 5초 대기
-            WebDriverWait(driver, 5).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "span.veBoZ"))
+            # 만약 iframe 안에 있다면, 아래 코드 사용
+            iframe = driver.find_element(
+                By.XPATH, '//*[@id="entryIframe"]'
+            )  # 적절한 iframe 경로를 사용
+            driver.switch_to.frame(iframe)
+
+            # '홈' span 태그가 나타날 때까지 최대 10초 대기
+            home_span = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, "//*[@class='veBoZ']"))
             )
-            home_span = driver.find_element(By.CSS_SELECTOR, "span.veBoZ")
             if home_span:
-                print("찾음")
                 valid_hospitals.append(hospital)
-        except:
-            pass
-
-        """
-        # BeautifulSoup를 사용하여 페이지 소스 파싱
-        page_source = driver.page_source
-        print()
-        # print(page_source)
-        print()
-        soup = BeautifulSoup(page_source, "html.parser")
-
-        # '홈' span 태그를 찾기
-        home_span = soup.find("span", class_="navbar_text")
-        
-        if home_span:
-            valid_hospitals.append(hospital)
-            print(valid_hospitals)
-        """
+                print(valid_hospitals)
+        except Exception as e:
+            print(f"{hospital}: 검색 결과 여러개")
+            continue
+        finally:
+            # iframe으로 전환했다면, 기본 콘텐츠로 돌아오기
+            driver.switch_to.default_content()
