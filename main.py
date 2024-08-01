@@ -3,7 +3,7 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 from config import url, all_gu
-from scraper import scraping_page, search_gu, search_hospital_detail
+from scraper import scraping_page, search_gu, search_hospital
 
 # 웹드라이버 설정
 service = Service(ChromeDriverManager().install())
@@ -22,7 +22,7 @@ unique_hospitals = set(hospital_names)
 print(
     f"서울 모든 안과 리스트(중복 제거): {unique_hospitals} ({len(unique_hospitals)}개)"
 )
-search_hospital_detail(driver, unique_hospitals)
+search_hospital(driver, unique_hospitals)
 
 # 드라이버 종료
 driver.quit()
