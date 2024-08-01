@@ -1,11 +1,13 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 from bs4 import BeautifulSoup
 import time
 from config import all_gu
 
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
+from visitor_review import scraping_visitor_review
+from blog_review import scraping_blog_review
 
 
 # 검색 결과 페이지 스크래핑
@@ -75,6 +77,7 @@ def search_hospital(driver, unique_hospitals):
                 By.XPATH, '//*[@id="entryIframe"]'
             )  # 적절한 iframe 경로를 사용
             driver.switch_to.frame(iframe)  # iframe으로 전환
+            time.sleep(2)  # 전환되는거 기다리기
 
             # '홈' span 태그가 나타날 때까지 최대 10초 대기
             home_span = WebDriverWait(driver, 10).until(
@@ -106,15 +109,29 @@ TODO:
 
 # 병원의 상세 정보를 스크래핑
 def scraping_hospital_info(driver, hospital):
+    iframe = driver.find_element(By.XPATH, '//*[@id="entryIframe"]')
+    driver.switch_to.frame(iframe)  # iframe으로 전환
+
     hospital_info = {}
 
+    # 병원 이름
     hospital_info["name"] = driver.find_element(By.CSS_SELECTOR, "span.GHAhO").text
-    hospital_info["location"] = driver.find_element(By.CSS_SELECTOR, "span.LDgIH").text
 
-    # 메인사진 가져오기
+    # 위치
+    try:
+        location = driver.find_element(By.CSS_SELECTOR, "span.LDgIH").text
+        hospital_info["location"] = location
+    except:
+        hospital_info["location"] = "위치 없음"
+
+    # 메인사진
     a_tag = driver.find_element(By.CSS_SELECTOR, "a.place_thumb.QX0J7")
     img_tag = a_tag.find_element(By.TAG_NAME, "img")
     hospital_info["thumbnail"] = img_tag.get_attribute("src")
+
+    # 방문자 리뷰, 블로그 리뷰
+    reviews = []
+    blog_urls = []
 
     # 리뷰 페이지로 이동
     review_tab_button = driver.find_element(
@@ -123,65 +140,8 @@ def scraping_hospital_info(driver, hospital):
     driver.execute_script("arguments[0].click();", review_tab_button)
     time.sleep(2)  # 페이지 로딩을 기다리는 시간
 
-    # 리뷰 가져오기
-    reviews = []
-    blog_urls = []
-
-    # 더보기 버튼을 계속 눌러서 모든 방문자 리뷰 로드
-    while True:
-        try:
-            load_more_button = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable((By.CSS_SELECTOR, "a.fvwqf[role='button']"))
-            )
-            driver.execute_script("arguments[0].click();", load_more_button)
-            time.sleep(2)  # 클릭 후 로딩 시간
-        except Exception as e:
-            # 더 이상 로드할 리뷰가 없으면 break
-            break
-
-    # 긴 방문자 리뷰의 더보기 버튼 클릭
-    more_buttons = driver.find_elements(By.CSS_SELECTOR, "a.xHaT3[role='button']")
-    for button in more_buttons:
-        try:
-            driver.execute_script("arguments[0].click();", button)
-            time.sleep(1)  # 클릭 후 로딩 시간
-        except Exception as e:
-            print(f"긴 리뷰 더보기 버튼 클릭 중 에러 발생: {e}")
-
-    # 모든 방문자 리뷰 스크래핑
-    review_elements = driver.find_elements(By.CSS_SELECTOR, "span.zPfVt")
-    for review in review_elements:
-        reviews.append(review.text)
-
-    hospital_info["visitor_review"] = reviews
-    hospital_info["visitor_review_cnt"] = len(reviews)
-
-    # 블로그 리뷰 페이지로 이동
-    review_tab_button = driver.find_element(
-        By.CSS_SELECTOR, "a[role='tab'].tpj9w._tab-menu"
-    )
-    driver.execute_script("arguments[0].click();", review_tab_button)
-    time.sleep(2)  # 페이지 로딩을 기다리는 시간
-
-    # 더보기 버튼 눌러서 모든 블로그 리뷰 보기
-    while True:
-        try:
-            load_more_button = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable((By.CSS_SELECTOR, "a.fvwqf[role='button']"))
-            )
-            driver.execute_script("arguments[0].click();", load_more_button)
-            time.sleep(2)  # 클릭 후 로딩 시간
-        except Exception as e:
-            # 더 이상 로드할 리뷰가 없으면 break
-            break
-
-    # 모든 블로그 url 스크래핑
-    urls = driver.find_elements(By.CSS_SELECTOR, "a.uUMhQ")
-    for url in urls:
-        blog_urls.append(url.get_attribute("href"))
-
-    hospital_info["blog_urls"] = blog_urls
-    hospital_info["blog_urls_cnt"] = len(blog_urls)
+    scraping_visitor_review(driver, hospital_info, reviews)
+    scraping_blog_review(driver, hospital_info, blog_urls)
 
     # 별점
     try:
@@ -199,13 +159,21 @@ def scraping_hospital_info(driver, hospital):
 
     print()
     print()
-    print()
     print("hospital_info:", hospital_info)
     print()
 
-    """
-    <span class="PXMot LXIwF">4.44</span>
-    <span class="xlx7Q">02-733-5111</span>
-    """
+    # iframe으로 전환했다면, 기본 콘텐츠로 돌아오기
+    driver.switch_to.default_content()
 
     return hospital_info
+
+
+"""
+hospital_info: {
+    'name': '명동서울밝은안과의원', 'location': '서울 중구 퇴계로 123 하이헤리엇',
+    'thumbnail': 'https://search.pstatic.net/common/?autoRotate=true&type=w560_sharpen&src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20231226_72%2F1703565521452eAQbJ_JPEG%2Fhospital_image_01.jpg',
+    'visitor_review': [], 'visitor_review_cnt': 0,
+    'blog_urls': [], 'blog_urls_cnt': 0,
+    'rating': 0.0, 'hp': '전화번호 없음'
+}
+"""
