@@ -4,7 +4,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 import time
 
 
-def scraping_blog_review(driver, hospital_info, blog_urls):
+def scraping_blog_review(driver, info, blog_urls):
     # 블로그 리뷰탭으로 이동
     blog_review_tab = driver.find_element(By.XPATH, '//*[@id="_subtab_view"]/div/a[2]')
     blog_review_tab.click()
@@ -26,5 +26,5 @@ def scraping_blog_review(driver, hospital_info, blog_urls):
     for url in urls:
         blog_urls.append(url.get_attribute("href"))
 
-    hospital_info["blog_urls"] = blog_urls
-    hospital_info["blog_urls_cnt"] = len(blog_urls)
+    info["blog_urls"] = blog_urls
+    info["blog_urls_cnt"] = len(blog_urls)

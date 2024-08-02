@@ -22,7 +22,29 @@ unique_hospitals = set(hospital_names)
 print(
     f"서울 모든 안과 리스트(중복 제거): {unique_hospitals} ({len(unique_hospitals)}개)"
 )
-search_hospital(driver, unique_hospitals)
+
+# 서울의 안과 중 검색 결과가 하나인 병원을 찾아 그 병원의 정보를 스크래핑
+hospital_info = search_hospital(driver, unique_hospitals)
+print("병원 정보:", hospital_info)
 
 # 드라이버 종료
 driver.quit()
+
+"""
+병원 정보: {
+    '병원이름1': {
+        'name': string,
+        'thumbnail': string,
+        'location': string,
+        'hp': string,
+        'rating': number,
+        'visitor_review': string,
+        'visitor_review_cnt': number,
+        'blog_urls': string,
+        'blog_urls_cnt': number,
+    },
+    '병원이름2': { 
+        ...
+    },
+}
+"""

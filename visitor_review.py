@@ -4,7 +4,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 import time
 
 
-def scraping_visitor_review(driver, hospital_info, reviews):
+def scraping_visitor_review(driver, info, reviews):
     # 더보기 버튼을 계속 눌러서 모든 방문자 리뷰 로드
     while True:
         try:
@@ -30,5 +30,5 @@ def scraping_visitor_review(driver, hospital_info, reviews):
     for review in review_elements:
         reviews.append(review.text)
 
-    hospital_info["visitor_review"] = reviews
-    hospital_info["visitor_review_cnt"] = len(reviews)
+    info["visitor_review"] = reviews
+    info["visitor_review_cnt"] = len(reviews)

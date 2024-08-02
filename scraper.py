@@ -59,7 +59,7 @@ def search_gu(driver, hospital_names):
 
 # 리스트의 병원을 검색 후 검색 결과가 하나만 뜨는 병원을 리스트에 저장
 def search_hospital(driver, unique_hospitals):
-    valid_hospitals = []  # 검색 시 검색 결과가 하나만 나오는 병원들
+    hospital_info = {}
 
     for hospital in unique_hospitals:
         search_box = driver.find_element(By.CSS_SELECTOR, "input.input_search")
@@ -86,42 +86,47 @@ def search_hospital(driver, unique_hospitals):
 
             if home_span:
                 # 병원의 상세 정보를 스크래핑
-                hospital_info = scraping_hospital_info(driver, hospital)
+                hospital_info[hospital] = scraping_hospital_info(driver, hospital)
 
         except Exception as e:
-            print(f"{hospital}: 검색 결과 여러개")
+            print(f"{hospital}: 검색 결과 여러개인 병원")
             continue
         finally:
             # iframe으로 전환했다면, 기본 콘텐츠로 돌아오기
             driver.switch_to.default_content()
 
+        print(hospital_info)
+
+    return hospital_info
+
 
 # 병원의 상세 정보를 스크래핑
 def scraping_hospital_info(driver, hospital):
 
-    hospital_info = {}
+    info = {}
 
     # 병원 이름
-    hospital_info["name"] = driver.find_element(By.CSS_SELECTOR, "span.GHAhO").text
+    # info["name"] = driver.find_element(By.CSS_SELECTOR, "span.GHAhO").text
+    info["name"] = hospital
 
     # 메인사진
     a_tag = driver.find_element(By.CSS_SELECTOR, "a.place_thumb.QX0J7")
     img_tag = a_tag.find_element(By.TAG_NAME, "img")
-    hospital_info["thumbnail"] = img_tag.get_attribute("src")
+    info["thumbnail"] = img_tag.get_attribute("src")
 
     # 위치
     try:
         location = driver.find_element(By.CSS_SELECTOR, "span.LDgIH").text
-        hospital_info["location"] = location
+        info["location"] = location
     except:
-        hospital_info["location"] = "위치 없음"
+        info["location"] = "위치 없음"
 
     # 전화번호
     try:
         hp = driver.find_element(By.CSS_SELECTOR, "span.xlx7Q").text
-        hospital_info["hp"] = hp
+        info["hp"] = hp
     except:
-        hospital_info["hp"] = "전화번호 없음"
+        info["hp"] = "전화번호 없음"
 
     # 방문자 리뷰, 블로그 리뷰
     reviews = []
@@ -137,20 +142,14 @@ def scraping_hospital_info(driver, hospital):
             By.XPATH,
             '//*[@id="app-root"]/div/div/div/div[6]/div[3]/div[1]/div/div[2]/span[1]/em',
         ).text
-        hospital_info["rating"] = float(rating)
+        info["rating"] = float(rating)
     except:
-        hospital_info["rating"] = 0.0
+        info["rating"] = 0.0
 
-    print("hospital_info(별점까지):", hospital_info)
+    scraping_visitor_review(driver, info, reviews)  # 방문자 리뷰
+    scraping_blog_review(driver, info, blog_urls)  # 블로그 리뷰
 
-    scraping_visitor_review(driver, hospital_info, reviews)  # 방문자 리뷰
-    scraping_blog_review(driver, hospital_info, blog_urls)  # 블로그 리뷰
-
-    print()
-    print("hospital_info:", hospital_info)
-    print()
-
-    return hospital_info
+    return info
 
 
 """
