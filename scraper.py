@@ -96,14 +96,6 @@ def search_hospital(driver, unique_hospitals):
             driver.switch_to.default_content()
 
 
-"""
-TODO:
-1. search_hospital_detail에 들어가서 하나씩 안과 상세 정보 크롤링(
-    안과명, 위치, 메인사진, 방문자 리뷰와 수, 블로그 리뷰 url과 리뷰 수(리뷰 키워드는 x), 별점 평균(없으면 0점), 전화번호
-    )
-"""
-
-
 # 병원의 상세 정보를 스크래핑
 def scraping_hospital_info(driver, hospital):
 
@@ -151,7 +143,7 @@ def scraping_hospital_info(driver, hospital):
 
     print("hospital_info(별점까지):", hospital_info)
 
-    # scraping_visitor_review(driver, hospital_info, reviews)  # 방문자 리뷰
+    scraping_visitor_review(driver, hospital_info, reviews)  # 방문자 리뷰
     scraping_blog_review(driver, hospital_info, blog_urls)  # 블로그 리뷰
 
     print()
