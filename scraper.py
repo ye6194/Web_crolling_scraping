@@ -69,7 +69,7 @@ def search_hospital(driver, unique_hospitals):
 
         search_box.send_keys(hospital)
         search_box.send_keys(Keys.RETURN)
-        time.sleep(1)
+        time.sleep(5)
 
         try:
             # 만약 iframe 안에 있다면, 아래 코드 사용
@@ -85,12 +85,9 @@ def search_hospital(driver, unique_hospitals):
             )
 
             if home_span:
-                hospital_info = scraping_hospital_info(
-                    driver, hospital
-                )  # 병원의 상세 정보를 스크래핑
+                # 병원의 상세 정보를 스크래핑
+                hospital_info = scraping_hospital_info(driver, hospital)
 
-                # valid_hospitals.append(hospital)
-                # print(valid_hospitals)
         except Exception as e:
             print(f"{hospital}: 검색 결과 여러개")
             continue
@@ -109,13 +106,16 @@ TODO:
 
 # 병원의 상세 정보를 스크래핑
 def scraping_hospital_info(driver, hospital):
-    iframe = driver.find_element(By.XPATH, '//*[@id="entryIframe"]')
-    driver.switch_to.frame(iframe)  # iframe으로 전환
 
     hospital_info = {}
 
     # 병원 이름
     hospital_info["name"] = driver.find_element(By.CSS_SELECTOR, "span.GHAhO").text
+
+    # 메인사진
+    a_tag = driver.find_element(By.CSS_SELECTOR, "a.place_thumb.QX0J7")
+    img_tag = a_tag.find_element(By.TAG_NAME, "img")
+    hospital_info["thumbnail"] = img_tag.get_attribute("src")
 
     # 위치
     try:
@@ -124,56 +124,45 @@ def scraping_hospital_info(driver, hospital):
     except:
         hospital_info["location"] = "위치 없음"
 
-    # 메인사진
-    a_tag = driver.find_element(By.CSS_SELECTOR, "a.place_thumb.QX0J7")
-    img_tag = a_tag.find_element(By.TAG_NAME, "img")
-    hospital_info["thumbnail"] = img_tag.get_attribute("src")
+    # 전화번호
+    try:
+        hp = driver.find_element(By.CSS_SELECTOR, "span.xlx7Q").text
+        hospital_info["hp"] = hp
+    except:
+        hospital_info["hp"] = "전화번호 없음"
 
     # 방문자 리뷰, 블로그 리뷰
     reviews = []
     blog_urls = []
 
-    # 리뷰 페이지로 이동
-    review_tab_button = driver.find_element(
-        By.CSS_SELECTOR, "a[role='tab'].tpj9w._tab-menu"
-    )
-    driver.execute_script("arguments[0].click();", review_tab_button)
-    time.sleep(2)  # 페이지 로딩을 기다리는 시간
+    # 리뷰탭으로 이동
+    review_tab = driver.find_element(By.XPATH, "//a[@role='tab'][span/text()='리뷰']")
+    review_tab.click()
+    time.sleep(2)  # 탭 전환 후 잠깐 기다림
 
-    scraping_visitor_review(driver, hospital_info, reviews)
-    scraping_blog_review(driver, hospital_info, blog_urls)
-
-    # 별점
     try:
-        rating = driver.find_element(By.CSS_SELECTOR, "span.PXMot.LXIwF").text
+        rating = driver.find_element(
+            By.XPATH,
+            '//*[@id="app-root"]/div/div/div/div[6]/div[3]/div[1]/div/div[2]/span[1]/em',
+        ).text
         hospital_info["rating"] = float(rating)
     except:
         hospital_info["rating"] = 0.0
 
-    # 전화번호
-    try:
-        hp = driver.find_element(By.CSS_SELECTOR, "sapn.xlx7Q").text
-        hospital_info["hp"] = hp
-    except:
-        hospital_info["hp"] = "전화번호 없음"
-
     print()
-    print()
+    print("중간점검(별점까지)")
     print("hospital_info:", hospital_info)
     print()
 
-    # iframe으로 전환했다면, 기본 콘텐츠로 돌아오기
-    driver.switch_to.default_content()
+    # scraping_visitor_review(driver, hospital_info, reviews)  # 방문자 리뷰
+    scraping_blog_review(driver, hospital_info, blog_urls)  # 블로그 리뷰
 
     return hospital_info
 
 
 """
-hospital_info: {
-    'name': '명동서울밝은안과의원', 'location': '서울 중구 퇴계로 123 하이헤리엇',
-    'thumbnail': 'https://search.pstatic.net/common/?autoRotate=true&type=w560_sharpen&src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20231226_72%2F1703565521452eAQbJ_JPEG%2Fhospital_image_01.jpg',
-    'visitor_review': [], 'visitor_review_cnt': 0,
-    'blog_urls': [], 'blog_urls_cnt': 0,
-    'rating': 0.0, 'hp': '전화번호 없음'
-}
+방문자 리뷰, 블로그 리뷰 가져오기 전에
+병원 이름, 썸네일, 위치, 전화번호 먼저 가져와야 함.
+그 후 리뷰탭으로 이동해서 별점 먼저 가져오고
+방문자 리뷰, 블로그 리뷰 가져오기
 """

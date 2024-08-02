@@ -8,7 +8,7 @@ def scraping_visitor_review(driver, hospital_info, reviews):
     # 더보기 버튼을 계속 눌러서 모든 방문자 리뷰 로드
     while True:
         try:
-            load_more_button = WebDriverWait(driver, 10).until(
+            load_more_button = WebDriverWait(driver, 4).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, "a.fvwqf[role='button']"))
             )
             driver.execute_script("arguments[0].click();", load_more_button)
