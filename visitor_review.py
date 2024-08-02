@@ -14,8 +14,7 @@ def scraping_visitor_review(driver, hospital_info, reviews):
             driver.execute_script("arguments[0].click();", load_more_button)
             time.sleep(2)  # 클릭 후 로딩 시간
         except Exception as e:
-            # 더 이상 로드할 리뷰가 없으면 break
-            break
+            break  # 더 이상 로드할 리뷰가 없으면 break
 
     # 긴 방문자 리뷰의 더보기 버튼 클릭
     more_buttons = driver.find_elements(By.CSS_SELECTOR, "a.xHaT3[role='button']")

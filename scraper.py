@@ -149,13 +149,14 @@ def scraping_hospital_info(driver, hospital):
     except:
         hospital_info["rating"] = 0.0
 
-    print()
-    print("중간점검(별점까지)")
-    print("hospital_info:", hospital_info)
-    print()
+    print("hospital_info(별점까지):", hospital_info)
 
     # scraping_visitor_review(driver, hospital_info, reviews)  # 방문자 리뷰
     scraping_blog_review(driver, hospital_info, blog_urls)  # 블로그 리뷰
+
+    print()
+    print("hospital_info:", hospital_info)
+    print()
 
     return hospital_info
 
