@@ -37,6 +37,7 @@ driver.quit()
         'thumbnail': string,
         'location': string,
         'hp': string,
+        'review_url': string,
         'rating': number,
         'visitor_review': string,
         'visitor_review_cnt': number,

@@ -82,9 +82,9 @@ def search_hospital(driver, unique_hospitals):
                 EC.presence_of_element_located((By.XPATH, "//*[@class='veBoZ']"))
             )
 
-            # if home_span:
-            # 병원의 상세 정보를 스크래핑
-            # hospital_info[hospital] = scraping_hospital_info(driver, hospital)
+            if home_span:
+                # 병원의 상세 정보를 스크래핑
+                hospital_info[hospital] = scraping_hospital_info(driver, hospital)
 
         except Exception as e:
             print(f"{hospital}: 검색 결과 여러개인 병원")
@@ -133,6 +133,10 @@ def scraping_hospital_info(driver, hospital):
     review_tab = driver.find_element(By.XPATH, "//a[@role='tab'][span/text()='리뷰']")
     review_tab.click()
     time.sleep(2)  # 탭 전환 후 잠깐 기다림
+
+    # 병원의 리뷰탭 url
+    review_url = driver.current_url
+    info["review_url"] = review_url
 
     try:
         rating = driver.find_element(
