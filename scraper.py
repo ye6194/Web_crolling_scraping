@@ -60,6 +60,7 @@ def search_gu(driver, hospital_names):
 # 리스트의 병원을 검색 후 검색 결과가 하나만 뜨는 병원을 리스트에 저장
 def search_hospital(driver, unique_hospitals):
     hospital_info = {}
+    many_result = []  # 검색 결과가 여러개인 병원 리스트
 
     for hospital in unique_hospitals:
         search_box = driver.find_element(By.CSS_SELECTOR, "input.input_search")
@@ -72,31 +73,28 @@ def search_hospital(driver, unique_hospitals):
         time.sleep(5)
 
         try:
-            # 만약 iframe 안에 있다면, 아래 코드 사용
-            iframe = driver.find_element(
-                By.XPATH, '//*[@id="entryIframe"]'
-            )  # 적절한 iframe 경로를 사용
+            iframe = driver.find_element(By.XPATH, '//*[@id="entryIframe"]')
             driver.switch_to.frame(iframe)  # iframe으로 전환
-            time.sleep(2)  # 전환되는거 기다리기
+            time.sleep(2)  # 전환 기다리기
 
-            # '홈' span 태그가 나타날 때까지 최대 10초 대기
-            home_span = WebDriverWait(driver, 10).until(
+            # '홈' span 태그가 나타날 때까지 최대 4초 대기
+            home_span = WebDriverWait(driver, 4).until(
                 EC.presence_of_element_located((By.XPATH, "//*[@class='veBoZ']"))
             )
 
-            if home_span:
-                # 병원의 상세 정보를 스크래핑
-                hospital_info[hospital] = scraping_hospital_info(driver, hospital)
+            # if home_span:
+            # 병원의 상세 정보를 스크래핑
+            # hospital_info[hospital] = scraping_hospital_info(driver, hospital)
 
         except Exception as e:
             print(f"{hospital}: 검색 결과 여러개인 병원")
+            many_result.append(hospital)
             continue
         finally:
             # iframe으로 전환했다면, 기본 콘텐츠로 돌아오기
             driver.switch_to.default_content()
 
-        print(hospital_info)
-
+    print(many_result)
     return hospital_info
 
 
@@ -106,7 +104,6 @@ def scraping_hospital_info(driver, hospital):
     info = {}
 
     # 병원 이름
-    # info["name"] = driver.find_element(By.CSS_SELECTOR, "span.GHAhO").text
     info["name"] = hospital
 
     # 메인사진

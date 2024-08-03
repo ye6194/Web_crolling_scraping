@@ -3,7 +3,7 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 from config import url, all_gu
-from scraper import scraping_page, search_gu, search_hospital
+from scraper import search_gu, search_hospital
 
 # 웹드라이버 설정
 service = Service(ChromeDriverManager().install())
